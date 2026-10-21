@@ -99,10 +99,11 @@
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs">
-        <p>Financial Accounting Interactive Learning System &copy; 2026</p>
-        <p class="mt-1 text-slate-500">Fully compatible with mobile and desktop. Standardized syllabus content.</p>
+    <!-- Footer with Custom Copyright Notice -->
+    <footer class="bg-slate-800 text-slate-200 py-6 px-4 text-center text-xs md:text-sm leading-relaxed border-t border-slate-700">
+        <p class="font-semibold text-white mb-1">&copy; 2026 Hung Hung Chua (Reed Chua). All Rights Reserved.</p>
+        <p class="mb-1 text-slate-300">本測驗教材及內容受版權法保護，未經書面授權不得複製、轉載或用於商業用途。</p>
+        <p class="text-slate-300">如有課程查詢、教學合作或意見反饋，歡迎聯絡：<a href="mailto:reedchua@yahoo.com" class="text-indigo-400 hover:text-indigo-300 underline">reedchua@yahoo.com</a></p>
     </footer>
 
     <!-- JavaScript logic and question bank -->
@@ -167,7 +168,6 @@
                 const typeVariant = Math.floor(i / concepts.length);
                 
                 let scenarioText = "";
-                let distractorList = [];
 
                 if (typeVariant === 0) {
                     scenarioText = `Identify the accounting concept or term best described: "${base.text}"`;
@@ -189,7 +189,6 @@
 
                 // Pick 3 distractors from distinct concepts
                 const otherConcepts = concepts.filter(c => c.title !== base.title);
-                // Shuffle distractors cleanly based on index
                 const d1 = otherConcepts[(i * 3 + 1) % otherConcepts.length].title;
                 const d2 = otherConcepts[(i * 3 + 2) % otherConcepts.length].title;
                 const d3 = otherConcepts[(i * 3 + 3) % otherConcepts.length].title;
@@ -295,7 +294,6 @@
                 card.className = "bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative transition-all";
                 card.id = `q-card-${index}`;
 
-                // Question Header
                 const qNum = index + 1;
                 
                 card.innerHTML = `
