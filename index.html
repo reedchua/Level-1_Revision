@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Accounting Practice Quiz</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .draggable-item {
+            cursor: grab;
+            user-select: none;
+            touch-action: none;
+        }
+        .draggable-item:active {
+            cursor: grabbing;
+        }
+        .drop-zone {
+            transition: all 0.2s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+        .selected-option {
+            border-color: #2563eb !important;
+            background-color: #eff6ff !important;
+            box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col justify-between">
+
+    <!-- Header / Navbar -->
+    <header class="bg-indigo-900 text-white shadow-md">
+        <div class="max-w-5xl mx-auto px-4 py-4 flex flex-wrap justify-between items-center gap-2">
+            <div>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight">Financial Accounting Master Quiz</h1>
+                <p class="text-xs md:text-sm text-indigo-200">Interactive Drag & Drop Practice Engine</p>
+            </div>
+            <div class="flex items-center space-x-3">
+                <span id="pool-status" class="bg-indigo-800 text-indigo-100 text-xs px-3 py-1.5 rounded-full font-medium">
+                    Questions Remaining: 300/300
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-5xl mx-auto px-4 py-6 flex-grow w-full">
+
+        <!-- Quiz Progress & Score Header -->
+        <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-6 flex flex-wrap justify-between items-center gap-4">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">Session Progress</span>
+                <span class="text-lg font-bold text-slate-700"><span id="answered-count">0</span> / 10 Answered</span>
+            </div>
+            <div class="w-full md:w-1/3 bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div id="progress-bar" class="bg-indigo-600 h-full w-0 transition-all duration-300"></div>
+            </div>
+            <div class="flex gap-2">
+                <button id="reset-history-btn" onclick="resetHistory()" class="px-3 py-1.5 text-xs text-slate-500 hover:text-slate-700 underline font-medium">
+                    Reset Seen Questions
+                </button>
+            </div>
+        </div>
+
+        <!-- Quiz Form -->
+        <form id="quiz-form" onsubmit="submitQuiz(event)">
+            <div id="questions-container" class="space-y-6">
+                <!-- 10 Questions injected dynamically here -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="mt-8 mb-12 flex flex-col sm:flex-row justify-center items-center gap-4">
+                <button type="submit" id="submit-btn" class="w-full sm:w-auto px-8 py-3.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-md transition-all text-base focus:ring-4 focus:ring-indigo-200">
+                    Submit Answers
+                </button>
+                <button type="button" id="next-quiz-btn" onclick="loadQuizSession()" class="w-full sm:w-auto px-8 py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-lg shadow-md transition-all text-base focus:ring-4 focus:ring-emerald-200 hidden">
+                    Try Another Quiz (Next 10)
+                </button>
+            </div>
+        </form>
+
+        <!-- Score Banner (Hidden initially) -->
+        <div id="result-banner" class="hidden mb-8 p-6 bg-white border border-slate-200 rounded-xl shadow-lg text-center">
+            <h2 class="text-2xl font-bold text-slate-800 mb-2">Quiz Completed!</h2>
+            <div class="text-5xl font-extrabold my-4" id="score-text">0 / 100</div>
+            <p id="score-feedback" class="text-slate-600 font-medium max-w-lg mx-auto mb-4"></p>
+            <button onclick="loadQuizSession()" class="px-6 py-2.5 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700 transition">
+                Load Next Practice Set
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs">
+        <p>Financial Accounting Interactive Learning System &copy; 2026</p>
+        <p class="mt-1 text-slate-500">Fully compatible with mobile and desktop. Standardized syllabus content.</p>
+    </footer>
+
+    <!-- JavaScript logic and question bank -->
+    <script>
+        // Comprehensive Question Generator Function to produce 300 distinct, high-quality questions
+        function generateQuestionBank() {
+            const bank = [];
+            
+            const concepts = [
+                { title: "Accruals & Matching Concept", text: "Revenue and expenses are recognized when earned or incurred, regardless of cash flow timing.", explanation: "The matching concept ensures expenses are recognized in the same accounting period as the revenues they help generate." },
+                { title: "Business Entity Concept", text: "Financial transactions of a business must be kept entirely separate from its owner's personal transactions.", explanation: "This concept treats the business as a legal/accounting unit distinct from its owners." },
+                { title: "Consistency Concept", text: "Accounting policies and methods should be applied identically from one period to the next.", explanation: "Consistency ensures financial statements remain comparable across different accounting periods." },
+                { title: "Going Concern Concept", text: "Financial statements are prepared under the assumption that the business will continue operating indefinitely.", explanation: "Assumes the business has neither the intention nor the need to liquidate in the foreseeable future." },
+                { title: "Materiality Concept", text: "Financial statements need only disclose items that are significant enough to influence economic decisions.", explanation: "Immaterial items can be expensed immediately to reduce administrative overhead." },
+                { title: "Prudence Concept", text: "Anticipate no profit, but provide for all possible liabilities and losses conservatively.", explanation: "Prevents assets and income from being overstated and liabilities or expenses from being understated." },
+                { title: "Realisation Concept", text: "Revenue is recognized only when legal title/ownership of goods passes to the buyer.", explanation: "Revenue cannot be recorded purely on contract signing; goods or services must be delivered." },
+                
+                { title: "Balance off / c/d & b/d", text: "Carried down (c/d) closes the current period; brought down (b/d) represents the opening balance for the new period.", explanation: "The ending balance of one period becomes the starting balance of the next." },
+                { title: "Trial Balance", text: "A list of ledger accounts and their balances used to verify arithmetical equality of debits and credits.", explanation: "While verifying mathematical balance, it does not reveal all types of accounting errors." },
+                
+                { title: "Capital Expenditure", text: "Costs incurred to acquire, improve, or extend the useful life of non-current assets.", explanation: "Capital expenditure is recorded as an asset on the Statement of Financial Position." },
+                { title: "Revenue Expenditure", text: "Day-to-day operational costs incurred to maintain normal business assets and functions.", explanation: "Revenue expenditure is expensed immediately in the Income Statement." },
+                
+                { title: "Error of Omission", text: "A transaction is completely left out of both the debit and credit records in accounting books.", explanation: "Because both sides are omitted, the Trial Balance still balances." },
+                { title: "Error of Commission", text: "An entry is made to the correct side of the wrong account within the correct class of accounts.", explanation: "E.g., recording a sale to J. Smith in P. Smith's trade receivables account." },
+                { title: "Error of Principle", text: "An entry is made into the wrong fundamental class of account (e.g., Asset vs. Expense).", explanation: "E.g., recording machinery repairs as a machinery purchase violates accounting principles." },
+                { title: "Error of Original Entry", text: "The incorrect numerical figure is entered into the book of prime entry and posted to both accounts.", explanation: "Both debit and credit entries receive the same incorrect amount, keeping Trial Balance equal." },
+                { title: "Reversal of Entries", text: "The correct amounts are recorded, but the debit and credit roles are completely flipped.", explanation: "The account that should be debited is credited, and vice versa." },
+                { title: "Compensating Error", text: "Two independent, unrelated errors cancel each other out in terms of debit and credit values.", explanation: "Because the total debit error equals the total credit error, the Trial Balance remains balanced." },
+                
+                { title: "Sales Day Book", text: "Book of prime entry used solely for recording credit sales to customers.", explanation: "Cash sales are excluded and directly entered into the cash book." },
+                { title: "Purchases Day Book", text: "Book of prime entry used to record all credit purchases of goods for resale.", explanation: "Non-current asset purchases on credit are recorded in the General Journal instead." },
+                { title: "Return Inwards Day Book", text: "Records goods returned to the business by credit customers.", explanation: "Also known as the Sales Returns Day Book." },
+                { title: "Return Outwards Day Book", text: "Records goods returned by the business back to credit suppliers.", explanation: "Also known as the Purchases Returns Day Book." },
+                { title: "Petty Cash Book & Imprest System", text: "Maintains a fixed float to pay small routine expenses, replenished periodically to restore the float.", explanation: "The imprest system restores the cash float back to its agreed original amount." },
+                { title: "General Journal", text: "Book of prime entry used for non-routine transactions like non-current asset purchases, bad debt write-offs, and error corrections.", explanation: "Provides narratives explaining complex accounting adjustments." },
+                
+                { title: "Standing Order", text: "An instruction from a bank account holder to pay a fixed amount to a recipient at regular intervals.", explanation: "Set up and controlled directly by the account holder." },
+                { title: "Direct Debit", text: "An agreement where a creditor is authorized to pull variable amounts from a buyer's bank account.", explanation: "Initiated by the creditor with pre-arranged notice to the customer." },
+                { title: "Unpresented Cheque", text: "A cheque written and issued by the business but not yet processed by the recipient's bank.", explanation: "Causes a timing difference between the Cash Book and Bank Statement." },
+                { title: "Outstanding Lodgment", text: "Cash/cheques paid into the bank by the business but not yet cleared/credited on the bank statement.", explanation: "Requires addition to the bank statement balance during reconciliation." },
+                { title: "Dishonored Cheque", text: "A cheque returned unpaid by the bank due to insufficient funds or errors.", explanation: "Must be reversed out of the Cash Book by crediting bank and debiting the debtor." },
+                { title: "Bank Reconciliation Statement", text: "A report explaining differences between the business Cash Book bank balance and the official Bank Statement.", explanation: "Reconciles timing differences, unpresented cheques, uncredited deposits, and bank errors." },
+                
+                { title: "Statutory Deductions", text: "Mandatory payroll deductions required by law (e.g., income tax, national insurance, MPF).", explanation: "Employers are legally required to withhold these directly from employee pay." },
+                { title: "Voluntary Deductions", text: "Optional payroll deductions authorized by the employee (e.g., union dues, pension top-ups).", explanation: "Can only be withheld with explicit employee authorization." },
+                { title: "Gross Pay vs Net Pay", text: "Gross Pay is total earnings before deductions; Net Pay is actual take-home pay after all deductions.", explanation: "Net Pay = Gross Pay - (Statutory Deductions + Voluntary Deductions)." },
+                { title: "Time Rate vs Piece Rate", text: "Time Rate pays according to hours worked; Piece Rate pays according to output produced.", explanation: "Piece rate directly incentives individual production speed." },
+                
+                { title: "Straight Line Depreciation", text: "Calculates uniform depreciation expense every year across the asset's useful life.", explanation: "Formula: (Cost - Residual Value) / Useful Life." },
+                { title: "Reducing Balance Depreciation", text: "Applies a fixed percentage rate to the carrying amount (net book value) of the asset each year.", explanation: "Results in higher depreciation expense in early years and lower expense in later years." },
+                { title: "Sales Ledger Control Account", text: "A summary account verifying the total balances of all individual trade receivable accounts.", explanation: "Helps prevent fraud and detect errors in the accounts receivable ledger." },
+                { title: "Purchases Ledger Control Account", text: "A summary account verifying the total balances of all individual trade payable accounts.", explanation: "Acts as an internal check on the trade payables ledger." },
+                { title: "Contra Account", text: "An account offset between trade receivables and payables when a business buys from and sells to the same entity.", explanation: "Settles mutual debts without exchanging cash." }
+            ];
+
+            let idCounter = 1;
+
+            // Generate 300 uniquely framed questions from accounting concepts
+            for (let i = 0; i < 300; i++) {
+                const base = concepts[i % concepts.length];
+                const typeVariant = Math.floor(i / concepts.length);
+                
+                let scenarioText = "";
+                let distractorList = [];
+
+                if (typeVariant === 0) {
+                    scenarioText = `Identify the accounting concept or term best described: "${base.text}"`;
+                } else if (typeVariant === 1) {
+                    scenarioText = `Which financial accounting principle or tool corresponds to this scenario: "${base.text}"?`;
+                } else if (typeVariant === 2) {
+                    scenarioText = `In financial accounting, what concept dictates that "${base.text.toLowerCase()}"?`;
+                } else if (typeVariant === 3) {
+                    scenarioText = `Review this accounting scenario: A firm observes that "${base.text}". What standard or topic applies?`;
+                } else if (typeVariant === 4) {
+                    scenarioText = `Select the appropriate classification or accounting treatment: "${base.text}"`;
+                } else if (typeVariant === 5) {
+                    scenarioText = `Which term specifically matches the following description: "${base.text}"?`;
+                } else if (typeVariant === 6) {
+                    scenarioText = `An accountant needs to record an item where "${base.text.toLowerCase()}". Which topic applies?`;
+                } else {
+                    scenarioText = `According to accounting rules, what concept handles: "${base.text}"?`;
+                }
+
+                // Pick 3 distractors from distinct concepts
+                const otherConcepts = concepts.filter(c => c.title !== base.title);
+                // Shuffle distractors cleanly based on index
+                const d1 = otherConcepts[(i * 3 + 1) % otherConcepts.length].title;
+                const d2 = otherConcepts[(i * 3 + 2) % otherConcepts.length].title;
+                const d3 = otherConcepts[(i * 3 + 3) % otherConcepts.length].title;
+
+                const options = [base.title, d1, d2, d3];
+                // Shuffle options deterministically for variety
+                const shuffledOptions = options.sort(() => (Math.sin(idCounter) > 0 ? 1 : -1));
+
+                bank.push({
+                    id: idCounter,
+                    question: scenarioText,
+                    correctAnswer: base.title,
+                    options: shuffledOptions,
+                    explanation: base.explanation
+                });
+
+                idCounter++;
+            }
+
+            return bank;
+        }
+
+        const questionBank = generateQuestionBank();
+        let currentSessionQuestions = [];
+        let userAnswers = {}; // qIndex -> selected string
+
+        // Local Storage Keys
+        const SEEN_KEY = "fa_quiz_seen_ids";
+
+        function getSeenIds() {
+            try {
+                return JSON.parse(localStorage.getItem(SEEN_KEY)) || [];
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function saveSeenIds(ids) {
+            try {
+                localStorage.setItem(SEEN_KEY, JSON.stringify(ids));
+            } catch (e) {
+                console.error("Failed to save to localStorage", e);
+            }
+        }
+
+        function resetHistory() {
+            localStorage.removeItem(SEEN_KEY);
+            updatePoolStatus();
+            alert("Question history reset! You can now access all 300 questions again.");
+            loadQuizSession();
+        }
+
+        function updatePoolStatus() {
+            const seen = getSeenIds();
+            const remaining = questionBank.length - seen.length;
+            document.getElementById("pool-status").innerText = `Questions Remaining: ${remaining}/${questionBank.length}`;
+        }
+
+        // Pick 10 non-repeating questions
+        function pick10Questions() {
+            let seen = getSeenIds();
+
+            // If remaining questions are less than 10, reset pool
+            if (questionBank.length - seen.length < 10) {
+                seen = [];
+                saveSeenIds([]);
+            }
+
+            const available = questionBank.filter(q => !seen.includes(q.id));
+            
+            // Fisher-Yates shuffle on available pool
+            const shuffled = [...available];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+
+            const selected = shuffled.slice(0, 10);
+
+            // Save chosen IDs to seen history
+            const newSeen = [...seen, ...selected.map(q => q.id)];
+            saveSeenIds(newSeen);
+            updatePoolStatus();
+
+            return selected;
+        }
+
+        // Render current 10 questions
+        function loadQuizSession() {
+            currentSessionQuestions = pick10Questions();
+            userAnswers = {};
+            
+            const container = document.getElementById("questions-container");
+            container.innerHTML = "";
+            document.getElementById("result-banner").classList.add("hidden");
+            document.getElementById("submit-btn").classList.remove("hidden");
+            document.getElementById("next-quiz-btn").classList.add("hidden");
+
+            updateProgress();
+
+            currentSessionQuestions.forEach((q, index) => {
+                const card = document.createElement("div");
+                card.className = "bg-white rounded-xl border border-slate-200 shadow-sm p-6 relative transition-all";
+                card.id = `q-card-${index}`;
+
+                // Question Header
+                const qNum = index + 1;
+                
+                card.innerHTML = `
+                    <div class="flex items-center justify-between mb-3 border-b border-slate-100 pb-3">
+                        <span class="text-xs font-bold text-indigo-600 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-wider">
+                            Question ${qNum} of 10
+                        </span>
+                        <span class="text-xs text-slate-400 font-medium">10 Marks</span>
+                    </div>
+
+                    <p class="text-slate-800 font-medium text-base md:text-lg mb-5 leading-relaxed">
+                        ${q.question}
+                    </p>
+
+                    <!-- Drop Target / Selected Answer Display -->
+                    <div class="mb-5">
+                        <label class="block text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">
+                            Your Selected Answer (Drag option here or click below)
+                        </label>
+                        <div id="drop-target-${index}" 
+                             ondragover="handleDragOver(event)" 
+                             ondragleave="handleDragLeave(event)" 
+                             ondrop="handleDrop(event, ${index})" 
+                             class="drop-zone min-h-[52px] border-2 border-dashed border-slate-300 rounded-lg bg-slate-50 flex items-center justify-center p-3 text-sm font-semibold text-slate-600">
+                            <span id="drop-placeholder-${index}" class="text-slate-400 font-normal italic">
+                                Drag an option here or click an option below
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Draggable / Clickable Options -->
+                    <div id="options-container-${index}" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        ${q.options.map((opt, optIdx) => `
+                            <div draggable="true" 
+                                 ondragstart="handleDragStart(event, ${index}, '${escapeQuotes(opt)}')" 
+                                 onclick="selectOption(${index}, '${escapeQuotes(opt)}')" 
+                                 id="opt-${index}-${optIdx}"
+                                 class="draggable-item option-card border border-slate-200 rounded-lg p-3 bg-white hover:bg-slate-50 transition-all flex items-center text-sm font-medium text-slate-700 hover:border-slate-300 shadow-sm">
+                                <span class="w-6 h-6 rounded-full bg-slate-100 border border-slate-300 text-slate-500 text-xs flex items-center justify-center mr-3 font-semibold shrink-0">
+                                    ${String.fromCharCode(65 + optIdx)}
+                                </span>
+                                <span class="leading-tight">${opt}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <!-- Feedback explanation (shown after submit) -->
+                    <div id="explanation-${index}" class="mt-4 p-4 rounded-lg hidden text-sm leading-relaxed"></div>
+                `;
+
+                container.appendChild(card);
+            });
+
+            // Scroll smoothly to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Safe quote escaping
+        function escapeQuotes(str) {
+            return str.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        }
+
+        // Drag & Drop Handlers
+        function handleDragStart(e, qIndex, optionValue) {
+            e.dataTransfer.setData("text/plain", JSON.stringify({ qIndex, optionValue }));
+            e.dataTransfer.effectAllowed = "move";
+        }
+
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = "move";
+            e.currentTarget.classList.add("drag-over");
+        }
+
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove("drag-over");
+        }
+
+        function handleDrop(e, qIndex) {
+            e.preventDefault();
+            e.currentTarget.classList.remove("drag-over");
+            
+            try {
+                const data = JSON.parse(e.dataTransfer.getData("text/plain"));
+                if (data.qIndex === qIndex) {
+                    selectOption(qIndex, data.optionValue);
+                }
+            } catch (err) {
+                console.error("Drop error", err);
+            }
+        }
+
+        // Select Option Logic (Handles both Click and Drag-Drop)
+        function selectOption(qIndex, optionValue) {
+            userAnswers[qIndex] = optionValue;
+
+            // Update Drop Target UI
+            const dropTarget = document.getElementById(`drop-target-${qIndex}`);
+            dropTarget.classList.remove("border-dashed", "border-slate-300", "bg-slate-50");
+            dropTarget.classList.add("border-solid", "border-indigo-500", "bg-indigo-50");
+            dropTarget.innerHTML = `
+                <div class="flex items-center justify-between w-full">
+                    <span class="text-indigo-900 font-bold text-sm">${optionValue}</span>
+                    <span class="text-indigo-600 text-xs bg-indigo-100 px-2 py-0.5 rounded font-medium">Selected</span>
+                </div>
+            `;
+
+            // Highlight corresponding option card
+            const optionsContainer = document.getElementById(`options-container-${qIndex}`);
+            const cards = optionsContainer.getElementsByClassName("option-card");
+            for (let card of cards) {
+                card.classList.remove("selected-option");
+                if (card.textContent.includes(optionValue)) {
+                    card.classList.add("selected-option");
+                }
+            }
+
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const answered = Object.keys(userAnswers).length;
+            document.getElementById("answered-count").innerText = answered;
+            const pct = (answered / 10) * 100;
+            document.getElementById("progress-bar").style.width = `${pct}%`;
+        }
+
+        // Submit and Grade Quiz
+        function submitQuiz(e) {
+            e.preventDefault();
+
+            const answeredCount = Object.keys(userAnswers).length;
+            if (answeredCount < 10) {
+                if (!confirm(`You have answered ${answeredCount} out of 10 questions. Are you sure you want to submit?`)) {
+                    return;
+                }
+            }
+
+            let score = 0;
+
+            currentSessionQuestions.forEach((q, index) => {
+                const card = document.getElementById(`q-card-${index}`);
+                const expBox = document.getElementById(`explanation-${index}`);
+                const selected = userAnswers[index];
+                const isCorrect = selected === q.correctAnswer;
+
+                if (isCorrect) {
+                    score += 10;
+                    card.classList.add("border-emerald-500", "bg-emerald-50/20");
+                } else {
+                    card.classList.add("border-rose-500", "bg-rose-50/20");
+                }
+
+                // Disable draggables
+                const optionsContainer = document.getElementById(`options-container-${index}`);
+                const cards = optionsContainer.getElementsByClassName("option-card");
+                for (let c of cards) {
+                    c.setAttribute("draggable", "false");
+                    c.classList.remove("hover:bg-slate-50", "cursor-grab");
+                    c.onclick = null;
+                }
+
+                // Show detailed feedback
+                expBox.classList.remove("hidden");
+                if (isCorrect) {
+                    expBox.classList.add("bg-emerald-100", "text-emerald-900", "border", "border-emerald-200");
+                    expBox.innerHTML = `
+                        <div class="font-bold flex items-center gap-1.5 text-emerald-800 mb-1">
+                            <svg class="w-4 h-4 fill-current text-emerald-600" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"/></svg>
+                            Correct (+10 Marks)
+                        </div>
+                        <p>${q.explanation}</p>
+                    `;
+                } else {
+                    expBox.classList.add("bg-rose-100", "text-rose-900", "border", "border-rose-200");
+                    expBox.innerHTML = `
+                        <div class="font-bold flex items-center gap-1.5 text-rose-800 mb-1">
+                            <svg class="w-4 h-4 fill-current text-rose-600" viewBox="0 0 20 20"><path d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"/></svg>
+                            Incorrect (0 Marks)
+                        </div>
+                        <p class="mb-1"><strong>Correct Answer:</strong> <span class="underline">${q.correctAnswer}</span></p>
+                        <p>${q.explanation}</p>
+                    `;
+                }
+            });
+
+            // Display Score Banner
+            const banner = document.getElementById("result-banner");
+            const scoreText = document.getElementById("score-text");
+            const scoreFeedback = document.getElementById("score-feedback");
+
+            scoreText.innerText = `${score} / 100`;
+            if (score >= 80) {
+                scoreText.className = "text-5xl font-extrabold my-4 text-emerald-600";
+                scoreFeedback.innerText = "Outstanding performance! You have demonstrated a solid grasp of financial accounting principles.";
+            } else if (score >= 50) {
+                scoreText.className = "text-5xl font-extrabold my-4 text-amber-600";
+                scoreFeedback.innerText = "Good effort! Review the incorrect answers and explanations below to strengthen your understanding.";
+            } else {
+                scoreText.className = "text-5xl font-extrabold my-4 text-rose-600";
+                scoreFeedback.innerText = "Keep practicing! Take time to review the explanations for each topic and try the next practice set.";
+            }
+
+            banner.classList.remove("hidden");
+            document.getElementById("submit-btn").classList.add("hidden");
+            document.getElementById("next-quiz-btn").classList.remove("hidden");
+
+            // Scroll to score banner
+            banner.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize quiz on load
+        window.onload = function() {
+            updatePoolStatus();
+            loadQuizSession();
+        };
+    </script>
+</body>
+</html>
